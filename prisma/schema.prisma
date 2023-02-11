@@ -1,0 +1,33 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:../src/data.db"
+}
+
+model user {
+    id       String     @id @unique
+    // vcmember vcmember[]
+    // vc       vc[]
+    vcmember vcmember[]
+}
+
+model vc {
+    id       String     @id @unique
+    // user     user       @relation(fields: [userid], references: [id])
+    userid   String
+    guildid  String
+    private  Boolean?
+    vcmember vcmember[]
+}
+
+model vcmember {
+    vc     vc     @relation(fields: [vcid], references: [id])
+    vcid   String
+    user   user   @relation(fields: [userid], references: [id])
+    userid String
+
+    @@id([vcid, userid])
+}
