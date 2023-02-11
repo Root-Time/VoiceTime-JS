@@ -9,17 +9,19 @@ datasource db {
 
 model user {
   id       String     @id @unique
-  // vcmember vcmember[]
-  // vc       vc[]
   vcmember vcmember[]
+  user1    friend[]   @relation("user1")
+  user2    friend[]   @relation("user2")
+  vc       vc[]
 }
 
 model vc {
   id       String     @id @unique
-  // user     user       @relation(fields: [userid], references: [id])
+  user     user       @relation(fields: [userid], references: [id])
   userid   String
   guildid  String
   private  Boolean?
+  history  String
   vcmember vcmember[]
 }
 
@@ -38,4 +40,13 @@ model guild {
   log      String
   normal   String
   private  String
+}
+
+model friend {
+  user1   user   @relation("user1", fields: [user1id], references: [id])
+  user1id String
+  user2   user   @relation("user2", fields: [user2id], references: [id])
+  user2id String
+
+  @@id([user1id, user2id])
 }

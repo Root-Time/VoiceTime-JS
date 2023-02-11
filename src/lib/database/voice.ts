@@ -1,24 +1,30 @@
-import { PrismaClient } from "@prisma/client";
-import { database } from "./base";
-import user from "./user";
+import { database, prisma } from "./base";
 
-const prisma = new PrismaClient();
+export default {
+  create,
+  remove,
+  getMembers,
+  getGuild,
+  getPrivat,
+  addMember,
+  changeOwner,
+  getOwner,
+  exist,
+  all,
+};
 
+/**
+ * create a new Voicechannel in database
+ * @param data needed to create a database voicechannel
+ * @returns created db vc
+ */
 async function create(data: {
   voiceid: string;
   ownerid: string;
   guildid: string;
   priavte?: Boolean;
 }) {
-  const userExists = !!(await prisma.user.findFirst({
-    where: {
-      id: data.ownerid,
-    },
-  }));
-
-  if (!userExists) {
-    await database.user.create(data.ownerid);
-  }
+  await database.user.create(data.ownerid);
 
   const vc = await prisma.vc.create({
     data: {
@@ -40,6 +46,11 @@ async function create(data: {
   return vc;
 }
 
+/**
+ * deletes all entries of the voicechannel
+ * including vcmember and vc
+ * @param voiceid Voicechannel id
+ */
 async function remove(voiceid: string) {
   await prisma.vcmember.deleteMany({
     where: {
@@ -54,7 +65,12 @@ async function remove(voiceid: string) {
   });
 }
 
-async function changeOwner() {}
+/**
+ * change the owner of voicechannel in the database
+ * @param voiceid Voicechannel id
+ * @param newOwner the new user id of the Voicechannel
+ */
+async function changeOwner(voiceid: string, newOwner: string) {}
 
 async function getOwner(voiceid: string) {
   const vc = await prisma.vc.findFirst({
@@ -68,7 +84,15 @@ async function getOwner(voiceid: string) {
   return vc.userid;
 }
 
+/**
+ * add a member to the voicechannel in the database
+ * @param voiceid Voicechannel id
+ * @param memberid the id of the member to add to
+ * @returns
+ */
 async function addMember(voiceid: string, memberid: string) {
+  await database.user.create(memberid);
+
   const vc = await prisma.vcmember.create({
     data: {
       userid: memberid,
@@ -79,6 +103,11 @@ async function addMember(voiceid: string, memberid: string) {
   return vc;
 }
 
+/**
+ * return a list of member of the voicechannel
+ * @param voiceid Voicechannel id
+ * @returns list of member
+ */
 async function getMembers(voiceid: string) {
   const result = await prisma.vcmember.findMany({
     where: {
@@ -109,25 +138,27 @@ async function getPrivat(voiceid: string) {
   return result?.private;
 }
 
-async function exist(vcID: string): Promise<boolean> {
-  return true;
+/**
+ * checks if the voicechannel exists in the database
+ * @param voiceid Voicechannel id
+ * @returns Boolean if the voicechannel exists
+ */
+async function exist(voiceid: string): Promise<boolean> {
+  const vcExists = !!(await prisma.vc.findFirst({
+    where: {
+      id: voiceid,
+    },
+  }));
+
+  // return if the user exists
+  return vcExists;
 }
 
+/**
+ * @returns a list of all voicechannels in the database
+ */
 async function all() {
   const voices = await prisma.vc.findMany({});
 
   return voices.map((voice) => voice.id);
 }
-
-export default {
-  create,
-  remove,
-  getMembers,
-  getGuild,
-  getPrivat,
-  addMember,
-  changeOwner,
-  getOwner,
-  exist,
-  all,
-};

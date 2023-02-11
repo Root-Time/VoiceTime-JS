@@ -37,6 +37,12 @@ async function reviveChannel(client: Client) {
 
     if (privat) createPrivateCheck(channel);
 
+    if (!channel.members.size) {
+      if (!channel.id) return;
+      if (channel.guild.channels.cache.has(channel.id)) await channel.delete();
+      await database.voice.remove(channel.id);
+      return;
+    }
     await deleteChannel(channel);
 
     // const membersId = await database.voice.getMembers(voiceId);
