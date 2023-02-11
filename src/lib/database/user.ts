@@ -1,17 +1,15 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "./base";
 
 export default {
-    create,
+  create,
 };
 
 async function create(id: string) {
-    const user = await prisma.user.create({
-        data: {
-            id: id,
-        },
-    });
-    
-    return user
+  const user = await prisma.user.create({
+    data: {
+      id: id,
+    },
+  });
+
+  return user;
 }

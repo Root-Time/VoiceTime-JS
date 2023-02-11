@@ -1,5 +1,5 @@
 export type Event = {
-    name: string;
-    once?: boolean;
-    execute(any);
+  name: string;
+  once?: boolean;
+  execute(any);
 };
