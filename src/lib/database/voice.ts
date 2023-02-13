@@ -11,6 +11,10 @@ export default {
   getOwner,
   exist,
   all,
+
+  getHistory,
+  getHistoryElement,
+  getHistoryMessage,
 };
 
 /**
@@ -31,7 +35,7 @@ async function create(data: {
       id: data.voiceid,
       userid: data.ownerid,
       guildid: data.guildid,
-
+      history: "",
       // add owner as member to voicechannel
       vcmember: {
         create: [
@@ -152,6 +156,45 @@ async function exist(voiceid: string): Promise<boolean> {
 
   // return if the user exists
   return vcExists;
+}
+async function getHistory(voiceid: string) {
+  const result = await prisma.vc.findUnique({
+    where: {
+      id: voiceid,
+    },
+  });
+
+  return result?.history;
+}
+
+async function getHistoryMessage(voiceid: string) {
+  return await getHistoryElement(voiceid, 0);
+}
+
+async function getHistoryElement(voiceid: string, element: number) {
+  const history = await getHistory(voiceid);
+
+  const items = history?.split(":") || [];
+
+  let shortCounter = 0;
+  let counter = 0;
+
+  for (const item of items) {
+    if (item == ":") {
+      shortCounter += 1;
+      continue;
+    }
+
+    shortCounter = 0;
+    counter + 1;
+
+    if (counter != element) continue;
+
+    return {
+      item: item,
+      type: shortCounter,
+    };
+  }
 }
 
 /**

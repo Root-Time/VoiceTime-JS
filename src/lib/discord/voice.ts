@@ -52,6 +52,7 @@ export async function createNormalTalk(member: GuildMember) {
     priavte: false,
   });
 
+  await createNormalCheck(channel);
   // move owner to the create
   member.voice.setChannel(channel);
 
@@ -119,6 +120,29 @@ export async function deleteChannel(channel: VoiceChannel) {
       await database.voice.remove(channel.id);
     }
   });
+}
+
+export async function createNormalCheck(channel: VoiceChannel) {
+  client.on(
+    Events.VoiceStateUpdate,
+    async function _(before: VoiceState, now: VoiceState) {
+      const member = now.member;
+
+      if (
+        !member ||
+        (channel.id != now.channelId && channel.id != before.channelId)
+      )
+        return;
+      if (!channel) {
+        client.removeListener(Events.VoiceStateUpdate, _);
+        return;
+      }
+
+      const join = now.channel == channel;
+
+      await updateJoinLeaveMessage(channel, member, join);
+    }
+  );
 }
 
 export async function createPrivateCheck(channel: VoiceChannel) {
@@ -256,19 +280,41 @@ async function updateJoinLeaveMessage(
   member: GuildMember,
   join: Boolean
 ) {
-  const messageId = await database.voice.getHistoryMessage(channel.id);
-  const history = await database.voice.getHistory(channel.id);
+  // const messageId = await database.voice.getHistoryMessage(channel.id);
+  // const history = await database.voice.getHistory(channel.id);
 
-  await database.voice.addHistory(channel.id, member, join);
+  // await database.voice.addHistory(channel.id, member, join);
 
-  const message = channel.messages.cache.get(messageId);
+  // const message = channel.messages.cache.get(messageId);
 
-  let messageContent: string;
+  const messageContent = `${voiceJoinDate()}\n${joinLeaveMessageString(
+    member,
+    join
+  )}`;
 
-  history.forEach((member) => {
-    messageContent += "\n";
-  });
+  await channel.send({ content: messageContent });
 
-  if (!message) {
-  }
+  // history.forEach((member) => {
+  //   messageContent += "\n";
+  // });
+
+  // if (!message) {
+  // }
+}
+
+function voiceJoinDate(lastDate?: string) {
+  const date = new Date();
+  const hour = new Date().getHours();
+  const minute = new Date().getMinutes();
+  const formatDate = `${hour}:${minute}`;
+
+  return lastDate == formatDate ? lastDate : "";
+}
+
+// TODO add language support
+function joinLeaveMessageString(member: GuildMember, join: Boolean) {
+  const joinMessage = `${member.user.username} joined!`;
+  const leaveMessage = `${member.user.username} leaved!`;
+
+  return join ? joinMessage : leaveMessage;
 }
